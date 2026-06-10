@@ -27,4 +27,15 @@ describe('evaluateAnomaly', () => {
     expect(evaluateAnomaly(10_000, null, 100).isAnomaly).toBe(false);
     expect(evaluateAnomaly(10_000, 0, 100).isAnomaly).toBe(false);
   });
+
+  it('honors injected custom thresholds (used for the demo override)', () => {
+    const lowered = { anomalyRatio: 1.2, criticalRatio: 2, minSamples: 1 };
+
+    // 1.5x baseline with only 1 prior sample: ignored by defaults, fires when lowered.
+    expect(evaluateAnomaly(1500, 1000, 1).isAnomaly).toBe(false);
+    const verdict = evaluateAnomaly(1500, 1000, 1, lowered);
+    expect(verdict.isAnomaly).toBe(true);
+    expect(verdict.severity).toBe('warning');
+    expect(evaluateAnomaly(2000, 1000, 1, lowered).severity).toBe('critical');
+  });
 });

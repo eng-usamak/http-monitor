@@ -11,7 +11,7 @@ import { IncidentModel } from './incident.model.js';
 import type { IncidentRecord } from './incident.types.js';
 
 const BASELINE_WINDOW_MS = 60 * 60 * 1000; // rolling 1-hour baseline
-const INCIDENT_COOLDOWN_MS = 15 * 60 * 1000; // suppress repeat incidents
+const INCIDENT_COOLDOWN_MS = config.incidentCooldownMinutes * 60 * 1000; // suppress repeat incidents
 
 interface Baseline {
   avg: number | null;
@@ -114,7 +114,11 @@ async function enrich(
 
 export async function checkForIncident(record: ResponseRecord): Promise<IncidentRecord | null> {
   const baseline = await getBaseline(record.createdAt);
-  const verdict = evaluateAnomaly(record.durationMs, baseline.avg, baseline.count);
+  const verdict = evaluateAnomaly(record.durationMs, baseline.avg, baseline.count, {
+    anomalyRatio: config.anomalyThresholdRatio,
+    criticalRatio: config.anomalyCriticalRatio,
+    minSamples: config.anomalyMinSamples,
+  });
   if (!verdict.isAnomaly) return null;
   if (await inCooldown()) return null;
 
