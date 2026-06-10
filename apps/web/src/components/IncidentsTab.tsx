@@ -4,8 +4,7 @@ import { formatDuration, formatTime } from '../lib/format';
 import type { Incident } from '../lib/types';
 
 function SeverityBadge({ severity }: { severity: Incident['severity'] }) {
-  const color =
-    severity === 'critical' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700';
+  const color = severity === 'critical' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700';
   return (
     <span className={`inline-block rounded px-2 py-0.5 text-xs font-semibold uppercase ${color}`}>
       {severity}
@@ -28,8 +27,8 @@ function IncidentCard({ incident }: { incident: Incident }) {
 
       <p className="mt-2 font-medium text-slate-900">{incident.summary}</p>
       <p className="mt-1 text-sm text-slate-500">
-        {formatDuration(incident.durationMs)} vs baseline {formatDuration(incident.baselineAvgMs)}{' '}
-        ({incident.ratio.toFixed(1)}x) · {incident.endpoint}
+        {formatDuration(incident.durationMs)} vs baseline {formatDuration(incident.baselineAvgMs)} (
+        {incident.ratio.toFixed(1)}x) · {incident.endpoint}
       </p>
 
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -94,7 +93,9 @@ export function IncidentsTab() {
         </p>
       )}
 
-      {data?.items.map((incident) => <IncidentCard key={incident.id} incident={incident} />)}
+      {data?.items.map((incident) => (
+        <IncidentCard key={incident.id} incident={incident} />
+      ))}
 
       {data && data.total > data.limit && (
         <div className="flex justify-end gap-2 text-sm">

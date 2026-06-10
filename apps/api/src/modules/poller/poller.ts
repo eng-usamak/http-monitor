@@ -47,11 +47,7 @@ function truncateBody(raw: string): { body: JsonValue | null; size: number } {
  * Network-level failures are retried once before being recorded as errors.
  */
 export async function pollOnce(options: PollOptions = {}): Promise<NewResponseRecord> {
-  const {
-    fetchFn = fetch,
-    url = config.httpbinUrl,
-    timeoutMs = config.requestTimeoutMs,
-  } = options;
+  const { fetchFn = fetch, url = config.httpbinUrl, timeoutMs = config.requestTimeoutMs } = options;
 
   const requestPayload = generatePayload();
   const body = JSON.stringify(requestPayload);

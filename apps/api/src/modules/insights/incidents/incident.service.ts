@@ -31,7 +31,9 @@ async function getBaseline(before: Date): Promise<Baseline> {
 }
 
 async function inCooldown(): Promise<boolean> {
-  const latest = await IncidentModel.findOne().sort({ createdAt: -1 }).lean<{ createdAt: Date } | null>();
+  const latest = await IncidentModel.findOne()
+    .sort({ createdAt: -1 })
+    .lean<{ createdAt: Date } | null>();
   return latest !== null && Date.now() - latest.createdAt.getTime() < INCIDENT_COOLDOWN_MS;
 }
 
@@ -116,34 +118,40 @@ export async function checkForIncident(record: ResponseRecord): Promise<Incident
   if (!verdict.isAnomaly) return null;
   if (await inCooldown()) return null;
 
-  const enrichment = await enrich(record, baseline.avg as number, verdict);
+  // The anomaly guard above guarantees a positive baseline average.
+  const baselineAvg = baseline.avg as number;
+  const enrichment = await enrich(record, baselineAvg, verdict);
 
   const doc = await IncidentModel.create({
     responseId: record.id,
     endpoint: config.httpbinUrl,
     severity: verdict.severity,
     durationMs: record.durationMs,
-    baselineAvgMs: baseline.avg,
+    baselineAvgMs: baselineAvg,
     ratio: verdict.ratio,
     summary:
       `Response time ${Math.round(record.durationMs)} ms is ` +
-      `${verdict.ratio.toFixed(1)}x the 1-hour average of ${Math.round(baseline.avg as number)} ms`,
+      `${verdict.ratio.toFixed(1)}x the 1-hour average of ${Math.round(baselineAvg)} ms`,
     ...enrichment,
   });
 
+  // `createdAt` is added at runtime by the `timestamps` option but is not part
+  // of the inferred document type, so widen the type before reading it.
+  const created = doc as typeof doc & { createdAt: Date };
+
   const incident: IncidentRecord = {
-    id: doc._id.toString(),
-    responseId: doc.responseId,
-    endpoint: doc.endpoint,
-    severity: doc.severity as IncidentRecord['severity'],
-    durationMs: doc.durationMs,
-    baselineAvgMs: doc.baselineAvgMs,
-    ratio: doc.ratio,
-    summary: doc.summary,
-    rootCauses: doc.rootCauses,
-    recommendations: doc.recommendations,
-    llmGenerated: doc.llmGenerated,
-    createdAt: doc.createdAt as Date,
+    id: created._id.toString(),
+    responseId: created.responseId,
+    endpoint: created.endpoint,
+    severity: created.severity as IncidentRecord['severity'],
+    durationMs: created.durationMs,
+    baselineAvgMs: created.baselineAvgMs,
+    ratio: created.ratio,
+    summary: created.summary,
+    rootCauses: created.rootCauses,
+    recommendations: created.recommendations,
+    llmGenerated: created.llmGenerated,
+    createdAt: created.createdAt,
   };
 
   emitIncidentCreated(incident);
