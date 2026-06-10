@@ -3,6 +3,7 @@ import express, { type Express, type NextFunction, type Request, type Response }
 import { ZodError } from 'zod';
 import { config } from './config.js';
 import { logger } from './lib/logger.js';
+import { createInsightsRouter } from './modules/insights/insights.routes.js';
 import { createResponseRouter } from './modules/responses/response.routes.js';
 
 export function createApp(): Express {
@@ -15,6 +16,7 @@ export function createApp(): Express {
   });
 
   app.use('/api', createResponseRouter());
+  app.use('/api', createInsightsRouter());
 
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
     if (err instanceof ZodError) {

@@ -3,6 +3,7 @@ import { createApp } from './app.js';
 import { config } from './config.js';
 import { connectDb, disconnectDb } from './db/connection.js';
 import { logger } from './lib/logger.js';
+import { startAnomalyWatcher } from './modules/insights/incidents/incident.service.js';
 import { startPoller } from './modules/poller/scheduler.js';
 import { attachRealtime } from './modules/realtime/socket.js';
 
@@ -12,6 +13,7 @@ async function main(): Promise<void> {
   const app = createApp();
   const server = createServer(app);
   attachRealtime(server);
+  startAnomalyWatcher();
   const poller = startPoller();
 
   server.listen(config.port, () => {

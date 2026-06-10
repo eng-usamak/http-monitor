@@ -36,6 +36,10 @@ export function useRealtime(): { connected: boolean } {
       });
     });
 
+    socket.on('incident:new', () => {
+      queryClient.invalidateQueries({ queryKey: ['incidents'] });
+    });
+
     return () => {
       socket.disconnect();
     };

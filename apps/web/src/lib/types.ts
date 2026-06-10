@@ -25,3 +25,39 @@ export interface Stats {
   avgDurationMs: number | null;
   p95DurationMs: number | null;
 }
+
+export interface Incident {
+  id: string;
+  responseId: string;
+  endpoint: string;
+  severity: 'warning' | 'critical';
+  durationMs: number;
+  baselineAvgMs: number;
+  ratio: number;
+  summary: string;
+  rootCauses: string[];
+  recommendations: string[];
+  llmGenerated: boolean;
+  createdAt: string;
+}
+
+export interface UsageSummary {
+  totalCalls: number;
+  totalTokensIn: number;
+  totalTokensOut: number;
+  totalCostUsd: number;
+  callsRemainingThisHour: number;
+  maxCallsPerHour: number;
+}
+
+export interface PayloadAnalysis {
+  summary: string;
+  llmGenerated: boolean;
+  basedOnResponses: number;
+  generatedAt: string;
+}
+
+export interface ChatDone {
+  cached: boolean;
+  fallback: boolean;
+}
