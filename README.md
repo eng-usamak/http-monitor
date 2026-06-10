@@ -225,17 +225,19 @@ The full database schema is in [`docs/SCHEMA.md`](docs/SCHEMA.md).
 
 The two halves deploy independently.
 
-**API → Render** (Docker, long-lived process for cron + sockets):
+**API → Railway** (Docker, always-on process for the cron poller + sockets):
 
-1. New **Web Service** from this repo; Render reads [`render.yaml`](render.yaml) (or
-   point it at the [`Dockerfile`](Dockerfile)).
-2. Set env vars: `MONGO_URL` (Atlas connection string), `CORS_ORIGIN` (your Vercel URL),
-   optionally `ANTHROPIC_API_KEY`. `PORT` is `3001`; health check is `/health`.
+1. New project → **Deploy from GitHub repo**. Railway reads [`railway.json`](railway.json)
+   and builds the [`Dockerfile`](Dockerfile).
+2. Set variables: `MONGO_URL` (Atlas connection string), `CORS_ORIGIN` (your Vercel URL),
+   optionally `ANTHROPIC_API_KEY`. Railway injects `PORT` automatically; health check is `/health`.
+3. Generate a public domain for the service and note its URL — it becomes the frontend's
+   `VITE_API_URL`.
 
-> **Note on free tiers:** the poller needs an always-on process. Render's free tier
-> sleeps after ~15 min idle, which pauses the cron. For uninterrupted polling use
-> **Railway** (no idle sleep), a paid Render instance, or an external keep-alive ping.
-> This is the one genuinely operational trade-off of the in-process scheduler.
+> **Why Railway for the API:** the poller is an always-on `node-cron` process, so the API
+> can't be serverless. Railway runs it continuously with no idle sleep — unlike some free
+> tiers (e.g. Render) that sleep after ~15 min idle and would pause polling. This is the
+> one genuinely operational constraint of the in-process scheduler.
 
 **Database → MongoDB Atlas:** free M0 cluster; copy the SRV connection string into
 `MONGO_URL`. (Atlas M0 is a replica set, which also enables the change-streams upgrade
